@@ -58,7 +58,6 @@ with the more efficient COPE scheme from \[[ABLMTY13][ABLMTY13]\].
 + **IEX-2Lev-Amazon**: a distributed implementation of text indexing based on MapReduce/Hadoop
 on [Amazon AWS](https://aws.amazon.com/fr/). 
 
-+ **Dls^D**: a dual secure (breach resistant and forward private) structured encryption scheme \[[AKM19][AKM19]\].
 + We also plan to share our Client-Server implementation for 2Lev, Dyn2Lev, IEX^B-2Lev, IEX^B-ZMF once finalized. 
 
 ## Build Instructions
@@ -114,7 +113,7 @@ For a quick test, create folder and store some input files, needed jars and test
 	
 + to test IEX-2Lev (response-hiding)
 
-	run `java org.crypto.sse.TestLocalIEXRH2Lev` 
+	run `java org.crypto.sse.TestLocalIEXRH2Lev`
 	
 + to test IEX-ZMF 
 
@@ -178,13 +177,9 @@ Mennink, E. Tischhauser, and K. Yasuda. .
    Ciphers and the Hash-CBC Constructions* by M. Bellare, A. Boldyreva, L.
 Knudsen and C. Namprempre.
 
-6. \[[AKM19](https://eprint.iacr.org/2018/195.pdf)\]: *Breach-Resistant Structured Encryption* by 
-	G. Amjad, S. Kamara and T. Moataz.
-
 
 [CJJJKRS14]: https://eprint.iacr.org/2014/853.pdf
 [KM17]: https://eprint.iacr.org/2017/126.pdf
 [Goh03]: https://eprint.iacr.org/2003/216.pdf
 [ABLMTY13]: https://eprint.iacr.org/2013/790.pdf
 [BBKN07]: https://cseweb.ucsd.edu/~mihir/papers/olc.pdf
-[AKM19]: https://eprint.iacr.org/2018/195.pdf

@@ -37,8 +37,6 @@ import javax.crypto.NoSuchPaddingException;
 public class TestLocalIEXRH2Lev {
 
 	public static void main(String[] args) throws Exception {
-		
-		Printer.addPrinter(new Printer(Printer.LEVEL.EXTRA));
 
 		BufferedReader keyRead = new BufferedReader(new InputStreamReader(System.in));
 
@@ -46,7 +44,7 @@ public class TestLocalIEXRH2Lev {
 
 		String pass = keyRead.readLine();
 
-		List<byte[]> listSK = IEX2Lev.keyGen(256, pass, "salt/salt", 100000);
+		List<byte[]> listSK = IEX2Lev.keyGen(256, pass, "salt/salt", 100);
 
 		long startTime = System.nanoTime();
 
@@ -55,6 +53,11 @@ public class TestLocalIEXRH2Lev {
 		System.out.println("Enter the relative path name of the folder that contains the files to make searchable");
 
 		String pathName = keyRead.readLine();
+
+		// Creation of different files based on selectivity
+		// Selectivity was computed in an inclusive way. All files that include
+		// x(i+1) include necessarily xi
+		// This is used for benchmarking and can be taken out of the code
 
 		ArrayList<File> listOfFile = new ArrayList<File>();
 		TextProc.listf(pathName, listOfFile);
@@ -66,7 +69,7 @@ public class TestLocalIEXRH2Lev {
 
 		long startTime2 = System.nanoTime();
 
-		EMM2Lev.master = listSK.get(0);
+		RH2Lev.master = listSK.get(0);
 
 		IEXRH2Lev disj = IEXRH2Lev.setup(listSK, TextExtractPar.lp1, TextExtractPar.lp2, bigBlock, smallBlock, 0);
 

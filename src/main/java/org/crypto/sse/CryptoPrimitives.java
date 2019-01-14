@@ -14,7 +14,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 //***********************************************************************************************//
 
 // This file contains most cryptographic primitives : AES in CTR mode for file and string encryption, 
@@ -151,27 +150,13 @@ public class CryptoPrimitives {
 	///////////////////// can also be used for random bit generation
 	// ***********************************************************************************************//
 
-	public static byte[] randomBytes(int size) {
-		byte[] randomBytes = new byte[size];
+	public static byte[] randomBytes(int sizeOfSalt) {
+		byte[] salt = new byte[sizeOfSalt];
 		ThreadedSeedGenerator thread = new ThreadedSeedGenerator();
 		SecureRandom random = new SecureRandom();
-		random.setSeed(thread.generateSeed(20, false));
-		random.nextBytes(randomBytes);
-		return randomBytes;
-	}
-
-	// ***********************************************************************************************//
-
-	///////////////////// Salt generation/RandomBytes: it is generated just once
-	///////////////////// and it is not necessary to keep it secret
-	///////////////////// can also be used for random bit generation
-	// ***********************************************************************************************//
-
-	public static byte[] randomSeed(int size) {
-		byte[] seed = new byte[size];
-		ThreadedSeedGenerator thread = new ThreadedSeedGenerator();
-		seed = thread.generateSeed(size, false);
-		return seed;
+		random.setSeed(thread.generateSeed(20, true));
+		random.nextBytes(salt);
+		return salt;
 	}
 
 	// ***********************************************************************************************//
@@ -253,8 +238,6 @@ public class CryptoPrimitives {
 		}
 		byte[] cipherText = concat(ivBytes, bOut.toByteArray());
 
-		cIn.close();
-		
 		return cipherText;
 
 	}
@@ -265,7 +248,6 @@ public class CryptoPrimitives {
 	///////////////////// /////////////////////////////
 
 	// ***********************************************************************************************//
-
 
 	public static byte[] encryptAES_CBC_String(byte[] keyBytes, byte[] ivBytes, String identifier)
 			throws InvalidKeyException, InvalidAlgorithmParameterException, NoSuchAlgorithmException,
@@ -290,11 +272,8 @@ public class CryptoPrimitives {
 			bOut.write(ch);
 		}
 		byte[] cipherText = concat(ivBytes, bOut.toByteArray());
-		
-		cIn.close();
 
 		return cipherText;
-
 	}
 
 	// ***********************************************************************************************//
@@ -317,8 +296,7 @@ public class CryptoPrimitives {
 
 		IvParameterSpec ivSpec = new IvParameterSpec(ivBytes);
 		SecretKeySpec key = new SecretKeySpec(keyBytes, "AES");
-		Cipher cipher = Cipher.getInstance("AES/CBC/NoPadding", "BC");
-
+		Cipher cipher = Cipher.getInstance("AES/CBC/PKCS7Padding", "BC");
 
 		// Initalization of the Cipher
 		cipher.init(Cipher.DECRYPT_MODE, key, ivSpec);
@@ -400,8 +378,6 @@ public class CryptoPrimitives {
 			bOut.write(ch);
 		}
 		byte[] cipherText = concat(ivBytes, bOut.toByteArray());
-		
-		cIn.close();
 
 		return cipherText;
 
@@ -444,8 +420,6 @@ public class CryptoPrimitives {
 		}
 
 		byte[] cipherText = concat(ivBytes, bOut.toByteArray());
-		
-		cIn.close();
 
 		// Send the outputfile name
 		out.writeObject(outputFileName);
@@ -492,8 +466,6 @@ public class CryptoPrimitives {
 		}
 
 		byte[] cipherText = concat(ivBytes, bOut.toByteArray());
-		
-		cIn.close();
 
 		write(cipherText, outputFileName, folderName);
 
@@ -598,8 +570,6 @@ public class CryptoPrimitives {
 			}
 			results[i] = CryptoPrimitives.bytesToBoolean(bOut.toByteArray());
 			tmpResults1[i + 1] = results[i];
-			
-			cIn.close();
 
 		}
 
@@ -680,9 +650,9 @@ public class CryptoPrimitives {
 				output.close();
 			}
 		} catch (FileNotFoundException ex) {
-			Printer.normalln("File not found.");
+			System.out.println("File not found.");
 		} catch (IOException ex) {
-			Printer.debugln(""+ex);
+			System.out.println(ex);
 		}
 	}
 
@@ -694,7 +664,7 @@ public class CryptoPrimitives {
 			InputStream input = new BufferedInputStream(new FileInputStream(file));
 			result = readAndClose(input);
 		} catch (FileNotFoundException ex) {
-			Printer.debugln(""+ex);
+			System.out.println(ex);
 		}
 		return result;
 	}
@@ -718,7 +688,7 @@ public class CryptoPrimitives {
 				aInput.close();
 			}
 		} catch (IOException ex) {
-			Printer.debugln(""+ex);
+			System.out.println(ex);
 		}
 		return result.toByteArray();
 	}

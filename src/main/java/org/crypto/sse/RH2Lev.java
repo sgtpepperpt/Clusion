@@ -28,13 +28,15 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 
 import javax.crypto.NoSuchPaddingException;
+import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
-import java.security.SecureRandom;
+import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -45,15 +47,15 @@ import java.util.concurrent.*;
 
 public class RH2Lev {
 
-	// define the number of characters that a file identifier can have. 
-	//Should be >= maximum size of file identifiers, or you might get a negative array exception from the encryption function
+	// define the number of character that a file identifier can have
 	public static int sizeOfFileIdentifer = 100;
 	public static String separator = "seperator";
 
-	public static int counter = 0;
+	public static byte[] master = null;
+	public static boolean lmm = false;
+	public static String eval = "";
 
-	// instantiate the Secure Random Object
-	public static SecureRandom random = new SecureRandom();
+	public static int counter = 0;
 
 	public Multimap<String, byte[]> dictionary = ArrayListMultimap.create();
 	public static List<Integer> free = new ArrayList<Integer>();
@@ -87,9 +89,9 @@ public class RH2Lev {
 		final Multimap<String, byte[]> dictionary = ArrayListMultimap.create();
 
 		for (int i = 0; i < dataSize; i++) {
+			// initialize all buckets with random values
 			free.add(i);
 		}
-		random.setSeed(CryptoPrimitives.randomSeed(16));
 
 		List<String> listOfKeyword = new ArrayList<String>(lookup.keySet());
 		int threads = 0;
@@ -114,19 +116,20 @@ public class RH2Lev {
 				public void run() {
 
 					while (concurrentMap.keySet().size() > 0) {
+						Set<Integer> possibleValues = concurrentMap.keySet();
 
 						Random rand = new Random();
-						String[] input = {""};
-						synchronized (concurrentMap) {
-							Set<Integer> possibleValues = concurrentMap.keySet();
-							int temp = rand.nextInt(possibleValues.size());
-							List<Integer> listOfPossibleKeywords = new ArrayList<Integer>(possibleValues);
-							// set the input as randomly selected from the remaining
-							// possible keys
-							input[0] = concurrentMap.get(listOfPossibleKeywords.get(temp)) ;
-							// remove the key
-							concurrentMap.remove(listOfPossibleKeywords.get(temp));
-						}
+
+						int temp = rand.nextInt(possibleValues.size());
+
+						List<Integer> listOfPossibleKeywords = new ArrayList<Integer>(possibleValues);
+
+						// set the input as randomly selected from the remaining
+						// possible keys
+						String[] input = { concurrentMap.get(listOfPossibleKeywords.get(temp)) };
+
+						// remove the key
+						concurrentMap.remove(listOfPossibleKeywords.get(temp));
 
 						try {
 
@@ -164,7 +167,6 @@ public class RH2Lev {
 			// initialize all buckets with random values
 			free.add(i);
 		}
-		random.setSeed(CryptoPrimitives.randomSeed(16));
 
 		List<String> listOfKeyword = new ArrayList<String>(lookup.keySet());
 		int threads = 0;
@@ -194,7 +196,7 @@ public class RH2Lev {
 			inputs.add(i, tmp);
 		}
 
-		Printer.debugln("End of Partitionning  \n");
+		//System.out.println("\t End of Partitionning  \n");
 
 		List<Future<Multimap<String, byte[]>>> futures = new ArrayList<Future<Multimap<String, byte[]>>>();
 		for (final String[] input : inputs) {
@@ -236,13 +238,11 @@ public class RH2Lev {
 		array = new byte[dataSize][];
 		Multimap<String, byte[]> gamma = ArrayListMultimap.create();
 
-		byte[] iv = new byte[16];
-
 		for (String word : listOfKeyword) {
 
 			counter++;
 			if (((float) counter / 10000) == (int) (counter / 10000)) {
-				Printer.debugln("Number of processed keywords " + counter);
+				System.out.println("Counter " + counter);
 			}
 
 			// generate the tag
@@ -253,7 +253,14 @@ public class RH2Lev {
 
 			// generate keys for response-hiding construction for SIV (Synthetic
 			// IV)
-			byte[] key3 = CryptoPrimitives.generateCmac(key, 3 + new String());
+			byte[] key3 = CryptoPrimitives.generateCmac(master, 3 + new String());
+
+			byte[] key4 = null;
+			if (lmm == false) {
+				key4 = CryptoPrimitives.generateCmac(master, 4 + word);
+			} else {
+				key4 = CryptoPrimitives.generateCmac(master, eval);
+			}
 
 			// Encryption of the lookup DB(w) deterministically to create unique
 			// tags
@@ -261,8 +268,8 @@ public class RH2Lev {
 			List<String> encryptedID = new ArrayList<String>();
 
 			for (String id : lookup.get(word)) {
-				random.nextBytes(iv);
-				encryptedID.add(new String(CryptoPrimitives.encryptAES_CTR_String(key3, iv, id, sizeOfFileIdentifer), "ISO-8859-1"));
+				encryptedID
+						.add(new String(CryptoPrimitives.DTE_encryptAES_CTR_String(key3, key4, id, 20), "ISO-8859-1"));
 			}
 
 			String encryptedIdString = "";
@@ -276,10 +283,9 @@ public class RH2Lev {
 			if (lookup.get(word).size() <= smallBlock) {
 				// pad DB(w) to "small block"
 				byte[] l = CryptoPrimitives.generateCmac(key1, Integer.toString(0));
-				random.nextBytes(iv);
-				byte[] v = CryptoPrimitives.encryptAES_CTR_String(key2, iv, "1" + separator + encryptedIdString,
-						smallBlock * sizeOfFileIdentifer);
-				gamma.put(new String(l), v);
+
+				gamma.put(new String(l), CryptoPrimitives.encryptAES_CTR_String(key2, CryptoPrimitives.randomBytes(16),
+						"1" + separator + encryptedIdString, smallBlock * sizeOfFileIdentifer));
 			}
 
 			else {
@@ -291,6 +297,7 @@ public class RH2Lev {
 					List<String> encryptedID1 = new ArrayList<String>(encryptedID);
 
 					if (j != t - 1) {
+
 						encryptedID1 = encryptedID1.subList(j * bigBlock, (j + 1) * bigBlock);
 					} else {
 						int sizeList = encryptedID.size();
@@ -322,10 +329,10 @@ public class RH2Lev {
 					}
 
 					int tmpPos = free.get(position);
-					random.nextBytes(iv);
-					array[tmpPos] = CryptoPrimitives.encryptAES_CTR_String(key2, iv, encryptedIdString,
-							bigBlock * sizeOfFileIdentifer);
+					array[tmpPos] = CryptoPrimitives.encryptAES_CTR_String(key2, CryptoPrimitives.randomBytes(16),
+							encryptedIdString, bigBlock * sizeOfFileIdentifer);
 					listArrayIndex.add(tmpPos + "***");
+
 					free.remove(position);
 
 				}
@@ -339,10 +346,9 @@ public class RH2Lev {
 				// medium case
 				if (t <= smallBlock) {
 					byte[] l = CryptoPrimitives.generateCmac(key1, Integer.toString(0));
-					random.nextBytes(iv);
-					byte[] v = CryptoPrimitives.encryptAES_CTR_String(key2, iv, "2" + separator + listArrayIndexString,
-							smallBlock * sizeOfFileIdentifer);
-					gamma.put(new String(l), v);
+					gamma.put(new String(l),
+							CryptoPrimitives.encryptAES_CTR_String(key2, CryptoPrimitives.randomBytes(16),
+									"2" + separator + listArrayIndexString, smallBlock * sizeOfFileIdentifer));
 				}
 				// big case
 				else {
@@ -384,10 +390,10 @@ public class RH2Lev {
 						for (String s : tmpListTwo) {
 							tmpListTwoString += s + separator;
 						}
-						random.nextBytes(iv);
 
-						array[tmpPos] = CryptoPrimitives.encryptAES_CTR_String(key2, iv, tmpListTwoString,
-								bigBlock * sizeOfFileIdentifer);
+						array[tmpPos] = CryptoPrimitives.encryptAES_CTR_String(key2, CryptoPrimitives.randomBytes(16),
+								tmpListTwoString, bigBlock * sizeOfFileIdentifer);
+
 						listArrayIndexTwo.add(tmpPos + separator);
 
 						free.remove(position);
@@ -402,10 +408,10 @@ public class RH2Lev {
 					// Pad the second set of identifiers
 
 					byte[] l = CryptoPrimitives.generateCmac(key1, Integer.toString(0));
-					random.nextBytes(iv);
-					byte[] v = CryptoPrimitives.encryptAES_CTR_String(key2, iv,
-							"3" + separator + listArrayIndexTwoString, smallBlock * sizeOfFileIdentifer);
-					gamma.put(new String(l), v);
+					gamma.put(new String(l),
+							CryptoPrimitives.encryptAES_CTR_String(key2, CryptoPrimitives.randomBytes(16),
+									"3" + separator + listArrayIndexTwoString, smallBlock * sizeOfFileIdentifer));
+
 				}
 
 			}
@@ -413,22 +419,6 @@ public class RH2Lev {
 		}
 
 		return gamma;
-	}
-
-	// ***********************************************************************************************//
-
-	///////////////////// Search Token generation /////////////////////
-	///////////////////// /////////////////////////////
-
-	// ***********************************************************************************************//
-
-	public static byte[][] token(byte[] key, String word) throws UnsupportedEncodingException {
-
-		byte[][] keys = new byte[2][];
-		keys[0] = CryptoPrimitives.generateCmac(key, 1 + word);
-		keys[1] = CryptoPrimitives.generateCmac(key, 2 + word);
-
-		return keys;
 	}
 
 	// ***********************************************************************************************//

@@ -26,8 +26,6 @@ import java.util.ArrayList;
 public class TestLocalRH2Lev {
 
 	public static void main(String[] args) throws Exception {
-		
-		Printer.addPrinter(new Printer(Printer.LEVEL.EXTRA));
 
 		BufferedReader keyRead = new BufferedReader(new InputStreamReader(System.in));
 
@@ -35,7 +33,7 @@ public class TestLocalRH2Lev {
 
 		String pass = keyRead.readLine();
 
-		byte[] sk = RR2Lev.keyGen(256, pass, "salt/salt", 100000);
+		byte[] sk = RR2Lev.keyGen(256, pass, "salt/salt", 100);
 
 		System.out.println("Enter the relative path name of the folder that contains the files to make searchable");
 
@@ -46,7 +44,7 @@ public class TestLocalRH2Lev {
 
 		TextProc.TextProc(false, pathName);
 
-		// The two parameters depend on the size of the data set. Change
+		// The two parameters depend on the size of the dataset. Change
 		// accordingly to have better search performance
 		int bigBlock = 1000;
 		int smallBlock = 100;
@@ -54,24 +52,17 @@ public class TestLocalRH2Lev {
 
 		// Construction of the global multi-map
 		System.out.println("\nBeginning of Encrypted Multi-map creation \n");
-		System.out.println("Number of keywords "+TextExtractPar.lp1.keySet().size());
-		System.out.println("Number of pairs "+	TextExtractPar.lp1.keys().size());
-		//start
-        long startTime = System.nanoTime();
+
+		RH2Lev.master = sk;
+
 		RH2Lev twolev = RH2Lev.constructEMMParGMM(sk, TextExtractPar.lp1, bigBlock, smallBlock, dataSize);
-		//end
-        long endTime = System.nanoTime();
 
-		//time elapsed
-        long output = endTime - startTime;
-
-        System.out.println("Elapsed time in seconds: " + output / 1000000000);			
-        
 		while (true) {
 
 			System.out.println("Enter the keyword to search for:");
 			String keyword = keyRead.readLine();
-			byte[][] token = RH2Lev.token(sk, keyword);
+			byte[][] token = RR2Lev.token(sk, keyword);
+
 			System.out.println(RH2Lev.resolve(CryptoPrimitives.generateCmac(sk, 3 + new String()),
 					twolev.query(token, twolev.getDictionary(), twolev.getArray())));
 

@@ -3,7 +3,7 @@
 //**********************************************************************************************
 
 
-package test.org.clusion;
+package org.clusion;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -13,8 +13,6 @@ import java.util.List;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.TreeMultimap;
-
-import src.org.clusion.DynRHAndroid;
 
 public class TestLocalDynRHAndroid {
 

@@ -29,8 +29,6 @@ import java.util.ArrayList;
 public class TestIndexing {
 
 	public static void main(String[] args) throws Exception {
-		
-		Printer.addPrinter(new Printer(Printer.LEVEL.EXTRA));
 
 		BufferedReader keyRead = new BufferedReader(new InputStreamReader(System.in));
 
@@ -44,7 +42,7 @@ public class TestIndexing {
 		TextProc.TextProc(false, pathName);
 
 		System.out.println("\nFirst mult-map " + TextExtractPar.lp1);
-		System.out.println("Second multi-map " + TextExtractPar.lp2);
+		System.out.println("Second multi-map " + TextExtractPar.lp1);
 
 	}
 

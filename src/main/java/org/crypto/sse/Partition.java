@@ -53,7 +53,7 @@ public class Partition {
 			List<String> inter = (List<String>) lookup.get(key);
 			List<String> interTMP = new ArrayList<String>(inter);
 
-			Printer.debugln("Step number: " + counter2++ + "Number of keywords " + keys.size());
+			System.out.println("Step number: " + counter2++ + "Number of keywords " + keys.size());
 
 			Set<String> set = new HashSet<String>(interTMP);
 			Multimap<Integer, String> partitionsTMP = ArrayListMultimap.create();
@@ -107,8 +107,8 @@ public class Partition {
 
 		}
 
-		Printer.debugln("Partitions size " + partitions.keySet().size());
-		Printer.debugln("\n");
+		System.out.println("Partitions size " + partitions.keySet().size());
+		System.out.println("\n");
 
 		return partitions;
 	}

@@ -28,7 +28,6 @@ import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
-import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -53,9 +52,6 @@ public class RR2Lev implements Serializable {
 
 	// define the number of character that a file identifier can have
 	public static int sizeOfFileIdentifer = 40;
-
-	// instantiate the Secure Random Object
-	public static SecureRandom random = new SecureRandom();
 
 	public static int counter = 0;
 
@@ -119,9 +115,7 @@ public class RR2Lev implements Serializable {
 			final int smallBlock, final int dataSize) throws InterruptedException, ExecutionException, IOException {
 
 		final Multimap<String, byte[]> dictionary = ArrayListMultimap.create();
-		
-		random.setSeed(CryptoPrimitives.randomSeed(16));
-        
+
 		for (int i = 0; i < dataSize; i++) {
 			// initialize all buckets with random values
 			free.add(i);
@@ -198,8 +192,6 @@ public class RR2Lev implements Serializable {
 			final int smallBlock, final int dataSize) throws InterruptedException, ExecutionException, IOException {
 
 		final Multimap<String, byte[]> dictionary = ArrayListMultimap.create();
-		
-		random.setSeed(CryptoPrimitives.randomSeed(16));
 
 		for (int i = 0; i < dataSize; i++) {
 			// initialize all buckets with random values
@@ -234,7 +226,7 @@ public class RR2Lev implements Serializable {
 			inputs.add(i, tmp);
 		}
 
-		Printer.debugln("End of Partitionning  \n");
+		//System.out.println("\t End of Partitionning  \n");
 
 		List<Future<Multimap<String, byte[]>>> futures = new ArrayList<Future<Multimap<String, byte[]>>>();
 		for (final String[] input : inputs) {
@@ -264,7 +256,7 @@ public class RR2Lev implements Serializable {
 
 	// ***********************************************************************************************//
 
-	///////////////////// Setup /////////////////////////////
+	///////////////////// SetupSI /////////////////////////////
 
 	// ***********************************************************************************************//
 
@@ -277,13 +269,11 @@ public class RR2Lev implements Serializable {
 		Multimap<String, byte[]> gamma = ArrayListMultimap.create();
 		long startTime = System.nanoTime();
 
-        byte[] iv = new byte[16];
-
 		for (String word : listOfKeyword) {
 
 			counter++;
 			if (((float) counter / 10000) == (int) (counter / 10000)) {
-				Printer.debugln("Number of processed keywords " + counter);
+				System.out.println("Counter " + counter);
 			}
 
 			// generate the tag
@@ -294,10 +284,9 @@ public class RR2Lev implements Serializable {
 			if (lookup.get(word).size() <= smallBlock) {
 				// pad DB(w) to "small block"
 				byte[] l = CryptoPrimitives.generateCmac(key1, Integer.toString(0));
-				random.nextBytes(iv);
-				byte[] v =CryptoPrimitives.encryptAES_CTR_String(key2, iv,
-						"1 " + lookup.get(word).toString(), smallBlock * sizeOfFileIdentifer);
-				gamma.put(new String(l), v);
+
+				gamma.put(new String(l), CryptoPrimitives.encryptAES_CTR_String(key2, CryptoPrimitives.randomBytes(16),
+						"1 " + lookup.get(word).toString(), smallBlock * sizeOfFileIdentifer));
 			}
 
 			else {
@@ -334,9 +323,7 @@ public class RR2Lev implements Serializable {
 					}
 
 					int tmpPos = free.get(position);
-					random.nextBytes(iv);
-
-					array[tmpPos] = CryptoPrimitives.encryptAES_CTR_String(key2, iv,
+					array[tmpPos] = CryptoPrimitives.encryptAES_CTR_String(key2, CryptoPrimitives.randomBytes(16),
 							tmpList.toString(), bigBlock * sizeOfFileIdentifer);
 					listArrayIndex.add(tmpPos + "");
 
@@ -347,10 +334,9 @@ public class RR2Lev implements Serializable {
 				// medium case
 				if (t <= smallBlock) {
 					byte[] l = CryptoPrimitives.generateCmac(key1, Integer.toString(0));
-					random.nextBytes(iv);
-					byte[] v = CryptoPrimitives.encryptAES_CTR_String(key2, iv,
-									"2 " + listArrayIndex.toString(), smallBlock * sizeOfFileIdentifer);
-					gamma.put(new String(l),v);
+					gamma.put(new String(l),
+							CryptoPrimitives.encryptAES_CTR_String(key2, CryptoPrimitives.randomBytes(16),
+									"2 " + listArrayIndex.toString(), smallBlock * sizeOfFileIdentifer));
 				}
 				// big case
 				else {
@@ -386,11 +372,12 @@ public class RR2Lev implements Serializable {
 						}
 
 						int tmpPos = free.get(position);
-						random.nextBytes(iv);
 
-						array[tmpPos] = CryptoPrimitives.encryptAES_CTR_String(key2, iv,
+						array[tmpPos] = CryptoPrimitives.encryptAES_CTR_String(key2, CryptoPrimitives.randomBytes(16),
 								tmpListTwo.toString(), bigBlock * sizeOfFileIdentifer);
+
 						listArrayIndexTwo.add(tmpPos + "");
+
 						free.remove(position);
 
 					}
@@ -398,10 +385,10 @@ public class RR2Lev implements Serializable {
 					// Pad the second set of identifiers
 
 					byte[] l = CryptoPrimitives.generateCmac(key1, Integer.toString(0));
-					random.nextBytes(iv);
-					byte[] v = CryptoPrimitives.encryptAES_CTR_String(key2, iv,
-							"3 " + listArrayIndexTwo.toString(), smallBlock * sizeOfFileIdentifer);
-					gamma.put(new String(l),v);	
+					gamma.put(new String(l),
+							CryptoPrimitives.encryptAES_CTR_String(key2, CryptoPrimitives.randomBytes(16),
+									"3 " + listArrayIndexTwo.toString(), smallBlock * sizeOfFileIdentifer));
+
 				}
 
 			}
@@ -409,7 +396,7 @@ public class RR2Lev implements Serializable {
 		}
 		long endTime = System.nanoTime();
 		long totalTime = endTime - startTime;
-		// Printer.debugln("Time for one (w, id) "+totalTime/lookup.size());
+		// System.out.println("Time for one (w, id) "+totalTime/lookup.size());
 		return gamma;
 	}
 

@@ -25,7 +25,9 @@
 package org.crypto.sse;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
@@ -33,8 +35,6 @@ import java.util.Map;
 
 public class TestLocalZMF {
 	public static void main(String[] args) throws Exception {
-		
-		Printer.addPrinter(new Printer(Printer.LEVEL.EXTRA));
 
 		int falsePosRate = 20;
 		int maxMaxLength = 20;
@@ -49,7 +49,7 @@ public class TestLocalZMF {
 
 		long startTime = System.nanoTime();
 
-		//BufferedWriter writer = new BufferedWriter(new FileWriter("logs.txt", true));
+		BufferedWriter writer = new BufferedWriter(new FileWriter("logs.txt", true));
 
 		System.out.println("Enter the relative path name of the folder that contains the files to make searchable:");
 

@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package src.org.clusion;
+package org.clusion;
 
 
 import org.spongycastle.crypto.digests.SHA256Digest;

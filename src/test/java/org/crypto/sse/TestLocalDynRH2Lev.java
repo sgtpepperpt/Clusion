@@ -8,13 +8,12 @@ import java.io.*;
 import java.util.ArrayList;
 
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.TreeMultimap;
 
 public class TestLocalDynRH2Lev {
 
 	public static void main(String[] args) throws Exception {
-		
-		Printer.addPrinter(new Printer(Printer.LEVEL.EXTRA));
 
 		BufferedReader keyRead = new BufferedReader(new InputStreamReader(System.in));
 
@@ -39,8 +38,10 @@ public class TestLocalDynRH2Lev {
 		int smallBlock = 100;
 		int dataSize = 10000;
 
-		// // Construction of the global multi-map
+		// Construction of the global multi-map
 		System.out.println("\nBeginning of Encrypted Multi-map creation \n");
+
+		RH2Lev.master = sk;
 
 		DynRH2Lev twolev = DynRH2Lev.constructEMMParGMM(sk, TextExtractPar.lp1, bigBlock, smallBlock, dataSize);
 

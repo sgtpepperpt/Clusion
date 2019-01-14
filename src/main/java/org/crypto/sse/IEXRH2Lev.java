@@ -42,7 +42,7 @@ public class IEXRH2Lev implements Serializable {
 	// Parameter of Disjunctive search
 	public static int maxDocumentIDs = 0;
 	// Change it based on data distribution and storage restrictions
-	static double filterParameter = 0;
+	static double filterParameter = 0.2;
 	public static long numberPairs = 0;
 	RH2Lev globalMM = null;
 	RH2Lev[] localMultiMap = null;
@@ -114,11 +114,11 @@ public class IEXRH2Lev implements Serializable {
 		RH2Lev[] localMultiMap = new RH2Lev[lookup.keySet().size()];
 		Multimap<String, Integer> dictionaryForMM = ArrayListMultimap.create();
 
-		Printer.debugln("Number of (w, id) pairs " + lookup.size());
+		System.out.println("Number of (w, id) pairs " + lookup.size());
 
-		Printer.debugln("Number of keywords " + lookup.keySet().size());
+		System.out.println("Number of keywords " + lookup.keySet().size());
 
-		Printer.debugln("Maximum size of |DB(w)| " + TextExtractPar.maxTupleSize);
+		System.out.println("Maximum size of |DB(w)| " + TextExtractPar.maxTupleSize);
 
 		BufferedWriter writer = new BufferedWriter(new FileWriter("logs.txt", true));
 
@@ -133,7 +133,7 @@ public class IEXRH2Lev implements Serializable {
 		///////////////////// size/////////////////////////////
 
 		HashMap<Integer, Integer> histogram = new HashMap<Integer, Integer>();
-		Printer.debugln("Number of documents " + lookup2.keySet().size());
+		System.out.println("Number of documents " + lookup2.keySet().size());
 		for (String keyword : lookup.keySet()) {
 			if (histogram.get(lookup.get(keyword).size()) != null) {
 				int tmp = histogram.get(lookup.get(keyword).size());
@@ -149,7 +149,7 @@ public class IEXRH2Lev implements Serializable {
 		}
 
 		// Construction of the global multi-map
-		Printer.debugln("\nBeginning of Global MM creation \n");
+		System.out.println("\nBeginning of Global MM creation \n");
 
 		long startTime1 = System.nanoTime();
 
@@ -165,7 +165,7 @@ public class IEXRH2Lev implements Serializable {
 
 		// Construction of the local multi-map
 
-		Printer.debugln("Start of Local Multi-Map construction");
+		System.out.println("Start of Local Multi-Map construction");
 
 		long startTime = System.nanoTime();
 
@@ -185,11 +185,11 @@ public class IEXRH2Lev implements Serializable {
 			}
 
 			// Filter setting optional. For a setup without any filtering set
-			// filterParameter to 0
+			// filterParameter to 1
 			if (((double) lookup.get(keyword).size() / TextExtractPar.maxTupleSize > filterParameter)) {
 
 				// Stats
-				Printer.debugln("Keyword in LMM " + keyword);
+				System.out.println("Keyword in LMM " + keyword);
 				BufferedWriter writer3 = new BufferedWriter(new FileWriter("words-logs.txt", true));
 				writer3.write("\n Keyword in LMM " + keyword);
 				writer3.close();
@@ -197,7 +197,7 @@ public class IEXRH2Lev implements Serializable {
 				for (int j = 0; j < 10; j++) {
 
 					if (counter == (int) ((j + 1) * lookup.keySet().size() / 10)) {
-						Printer.statsln("Number of total keywords processed equals " + j + "0 % \n");
+						System.out.println("Number of total keywords processed equals " + j + "0 % \n");
 						break;
 					}
 				}
@@ -215,7 +215,7 @@ public class IEXRH2Lev implements Serializable {
 				// between "keyword" and "word"
 				for (String word : VW) {
 					// Filter setting optional. For a setup without any
-					// filtering set filterParameter to 0
+					// filtering set filterParameter to 1
 					if (((double) lookup.get(word).size() / TextExtractPar.maxTupleSize > filterParameter)) {
 						Collection<String> l1 = new ArrayList<String>(lookup.get(word));
 						Collection<String> l2 = new ArrayList<String>(lookup.get(keyword));
@@ -228,8 +228,8 @@ public class IEXRH2Lev implements Serializable {
 				RH2Lev.counter = 0;
 
 				// dataSize = (int) filterParameter;
-				EMM2Lev.eval = 4 + keyword;
-				EMM2Lev.lmm = true;
+				RH2Lev.eval = 4 + keyword;
+				RH2Lev.lmm = true;
 
 				disj2.getLocalMultiMap()[counter] = RH2Lev.constructEMMParGMM(
 						CryptoPrimitives.generateCmac(keys.get(0), keyword), secondaryLookup, bigBlock, smallBlock,
@@ -245,7 +245,7 @@ public class IEXRH2Lev implements Serializable {
 
 		long endTime = System.nanoTime();
 
-		Printer.statsln("Time to construct LMM " + (endTime - startTime) / 1000000000);
+		System.out.println("Time to construct LMM " + (endTime - startTime) / 1000000000);
 
 		disj2.setDictionaryForMM(dictionaryForMM);
 		return disj2;

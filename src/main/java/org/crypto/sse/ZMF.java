@@ -36,6 +36,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -157,7 +158,7 @@ public class ZMF {
 
 						boolean[][] results = CryptoPrimitives.onlineCipher(keyOCHash, keyOCEnc, messageBol);
 
-						// Printer.debugln("Time of the OCs "+
+						// System.out.println("Time of the OCs "+
 						// messageBol.length+ " "+(endTime-startTime)+ "
 						// "+(endTime1-startTime1));
 
@@ -288,7 +289,7 @@ public class ZMF {
 
 		System.arraycopy(key, 0, keyPRF, 0, key.length / 3);
 
-		// Printer.debugln("Key PRF "+
+		// System.out.println("Key PRF "+
 		// CryptoPrimitives.booleanToString(CryptoPrimitives.bytesToBoolean(keyPRF)));
 
 		// Key for the online cipher
